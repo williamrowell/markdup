@@ -10,7 +10,7 @@ of 2 bp. If an `rq` tag is available, as in aligned CCS BAMs, I choose the read
 with the highest `rq`.  Otherwise, as in aligned subreads BAMs, I choose the
 first read that the algorithm encounters. The duplicate read frequency is output
 to `stdout`.  If `--output <target>` is specified, a BAM is written to
-`<target>` with duplicate reads flagged with the 0x400 bit.
+`<target>` with duplicate reads flagged with the `0x400` bit.
 
 ## Requirements:
 
