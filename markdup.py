@@ -31,7 +31,7 @@ with pysam.AlignmentFile(args.inBAM, 'rb') as infile:
         data['ref_end'].append(int(read.reference_end))
         if read.has_tag('rq'):  data['read_qual'].append(float(read.get_tag('rq')))
         data['dup'].append(False)
-        data['dup_index'].append(0)
+        data['dup_index'].append(None)
 if not data['read_qual']: data.pop('read_qual', None)
 df = pd.DataFrame(data)
 
@@ -52,11 +52,11 @@ for i in range(1, len(df)):
 # iterate through duplicate sets, and unmark the read with the highest quality
 # if quality is not available (subreads), choose one at random
 if 'read_qual' in data:
-    for i in range(1, dup_index):
+    for i in range(0, dup_index):
         df.loc[df[df['dup_index'] == i]['read_qual'].idxmax(), 'dup'] = False
 else:
-    for i in range(1, dup_index):
-        df[df['dup_index'] == i].sample(axis=1)['dup'] = False
+    for i in range(0, dup_index):
+        df[df['dup_index'] == i].sample(axis=0)['dup'] = False
 
 duplicates = set(df[df['dup']].index.values)
 # iterate through bamfile again, marking all duplicates with dup flag
