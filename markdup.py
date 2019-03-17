@@ -20,6 +20,7 @@ args = parser.parse_args()
 data = {'ref_id': list(),
         'ref_start': list(),
         'ref_end': list(),
+        'query_length': list(),
         'read_qual': list(),
         'dup': list(),
         'dup_index': list()}
@@ -29,6 +30,7 @@ with pysam.AlignmentFile(args.inBAM, 'rb') as infile:
         data['ref_id'].append(int(read.reference_id))
         data['ref_start'].append(int(read.reference_start))
         data['ref_end'].append(int(read.reference_end))
+        data['query_length'].append(int(read.infer_query_length()))
         if read.has_tag('rq'):  data['read_qual'].append(float(read.get_tag('rq')))
         data['dup'].append(False)
         data['dup_index'].append(None)
@@ -39,12 +41,17 @@ df = pd.DataFrame(data)
 dup_index = 0
 dup_state = False
 for i in range(1, len(df)):
+    # two reads are duplicate if:
+    # - alignments start within wiggle bp of each other
+    # - alignments end within wiggle bp of each other
+    # - read lengths with 2*wiggle bp of each other
     if df.loc[i, 'ref_id'] == df.loc[i-1, 'ref_id'] and \
        abs(df.loc[i-1, 'ref_start'] - df.loc[i, 'ref_start']) <= args.wiggle and \
-       abs(df.loc[i, 'ref_end'] - df.loc[i-1, 'ref_end']) <= args.wiggle:
+       abs(df.loc[i, 'ref_end'] - df.loc[i-1, 'ref_end']) <= args.wiggle and \
+       abs(df.loc[i-1, 'query_length'] - df.loc[i, 'query_length']) <= 2*args.wiggle:
         df.loc[[i, i-1], 'dup'] = True  # mark this read and previous read
-        df.loc[[i, i-1], 'dup_index'] = dup_index  # a block of duplicate alignments
-        dup_state = True  # we're in the middle of a block of duplicates
+        df.loc[[i, i-1], 'dup_index'] = dup_index  # a block of duplicates
+        dup_state = True  # in the middle of a block of duplicates
     elif dup_state:
         dup_state = False
         dup_index += 1
