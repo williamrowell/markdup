@@ -56,7 +56,7 @@ if 'read_qual' in data:
         df.loc[df[df['dup_index'] == i]['read_qual'].idxmax(), 'dup'] = False
 else:
     for i in range(0, dup_index):
-        df[df['dup_index'] == i].sample(axis=0)['dup'] = False
+        df.loc[df[df['dup_index'] == i].sample(axis=0).index, 'dup'] = False
 
 duplicates = set(df[df['dup']].index.values)
 # iterate through bamfile again, marking all duplicates with dup flag
