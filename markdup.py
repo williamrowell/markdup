@@ -1,13 +1,21 @@
 #!/usr/bin/env python
 """Identify and flag PCR duplicate reads in an aligned PacBio BAM.
 
-For an aligned CCS BAM, the alignment with the highest rq is chosen.
-For an aligned subreads BAM, the first alignment encountered is chosen.
+Reads with identical alignments within aln_wiggle on both ends
+and with length within len_wiggle % are marked as duplicates.
+Alignment with highest read quality, number of passes, and 
+query name md5 hash (in that order) is chosen as primary.
 """
 import argparse
 import hashlib
 import pysam
 import pandas as pd
+import numpy as np
+
+
+def mean_read_qual(query_qualities):
+    "convert phred scaled qual array to mean read quality"
+    return 1 - 10 ** (np.mean(query_qualities)/-10)
 
 
 def match_ref(df, i):
@@ -53,9 +61,9 @@ def set_primary(df, dup_index):
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('inBAM', help='aligned bam', type=str)
 parser.add_argument('--outBAM', help='output bam', type=str)
-parser.add_argument('--aln_wiggle', help='bp alignment wiggle at ends (2)',
+parser.add_argument('--aln_wiggle', help='bp alignment wiggle at ends, default 2',
                     type=int, default=2)
-parser.add_argument('--len_wiggle', help='percent read len wiggle (10 = 10%)',
+parser.add_argument('--len_wiggle', help='percent read len wiggle, default 10',
                     type=int, default=10)
 args = parser.parse_args()
 
@@ -81,6 +89,9 @@ with pysam.AlignmentFile(args.inBAM, 'rb') as infile:
         data['query_length'].append(int(read.infer_query_length()))
         if read.has_tag('rq'):
             data['read_qual'].append(float(read.get_tag('rq')))
+        elif read.query_qualities:
+            data['read_qual']\
+                .append(mean_read_qual(read.query_qualities))
         if read.has_tag('np'):
             data['num_passes'].append(int(read.get_tag('np')))
         data['dup'].append(False)
@@ -88,6 +99,7 @@ with pysam.AlignmentFile(args.inBAM, 'rb') as infile:
 if not data['read_qual']:
     data.pop('read_qual', None)
     fields.remove('read_qual')
+if not data['num_passes']:
     data.pop('num_passes', None)
     fields.remove('num_passes')
 df = pd.DataFrame(data)
