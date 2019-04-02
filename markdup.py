@@ -3,7 +3,7 @@
 
 Reads with identical alignments within aln_wiggle on both ends
 and with length within len_wiggle % are marked as duplicates.
-Alignment with highest read quality, number of passes, and 
+Alignment with highest read quality, number of passes, and
 query name md5 hash (in that order) is chosen as primary.
 """
 import argparse
