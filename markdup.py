@@ -137,4 +137,4 @@ if args.outBAM:
                 read.is_duplicate = True
             outfile.write(read)
 
-print '{:.08f}'.format((len(duplicates)/float(len(df))))
+print('{:.08f}'.format((len(duplicates)/float(len(df)))))

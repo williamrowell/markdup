@@ -30,7 +30,7 @@ specified, a BAM is written to `<target>` with duplicate reads flagged with the
 
 ## Requirements
 
-python2 >=2.7
+python >= 3.7
 
 ```bash
 pip install pysam pandas numpy
