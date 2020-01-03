@@ -1,3 +1,6 @@
+# Please use [pbmarkdup](https://github.com/PacificBiosciences/pbmarkdup) instead.
+
+
 # markdup.py
 
 ## Purpose
